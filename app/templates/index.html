@@ -1,0 +1,40 @@
+# app/templates/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resume Parser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        textarea {
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Resume Parser</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <div>
+            <label for="file">Upload Resume:</label>
+            <input type="file" id="file" name="file" required accept=".pdf,.docx,.txt">
+        </div>
+        <div>
+            <label for="job_description">Job Description:</label>
+            <textarea id="job_description" name="job_description" required></textarea>
+        </div>
+        <button type="submit">Upload and Analyze</button>
+    </form>
+</body>
+</html>
