@@ -45,7 +45,7 @@ A FastAPI-based application for parsing resumes, analyzing job descriptions, and
 
 ###  structure 
 
-        
+ ![structure](./assets/structure.svg)
 
 
 
