@@ -5,7 +5,7 @@ import nltk
 from nltk.corpus import stopwords
 import requests
 import google.generativeai as genai
-
+import json
 
 # Ensure you download NLTK stopwords first
 nltk.download('stopwords')
@@ -44,35 +44,49 @@ def use_gemini_llm(summary, jd_content):
     input_text = (
     f"Analyze the following resume summary and job description thoroughly. "
     f"Provide the following information explicitly:\n"
-    f"1. A Skill Match Score (0-100) based on the alignment between the resume and the job description.\n"
+    f"1. A Skill Match Score (0-100) based on the alignment between the resume and the job description. in this format SkillMatchScore : score \n"
     f"2. A the job description explicitly requires how many yrs of experince  ?\n"
-    f"3. Archit's resume demonstrates how many yrs of experince ? \n"
+    f"3. candidate resume demonstrates how many yrs of experince in number in this format resume_experience :  \n"
     f"Resume Summary:\n{summary}\n\n"
     f"Job Description:\n{jd_content}"
+    f"create proper key value pair for score , year of experince , email and name in proper json format very imp "
       )
 
     #print("here we go for debbugunh " , input_text)   
-    response_text = model.generate_content(input_text)
-    print("debugger", response_text)
-# Extract the generated text content
+    response = model.generate_content(input_text)
+    json_response = json.dumps({"text": response.text}, indent=2)  # Embed in JSON
+    print("json_response" , json_response)
+   
+
+    json_match = re.search(r'```json\\n(.*?)\\n```', json_response, re.DOTALL)
+
+    if json_match:
+    # Step 2: Clean up the JSON string
+        json_data = json_match.group(1).replace('\\n', '').replace('\\', '')
+
     try:
-        response_get = response_text.candidates[0].content.parts[0].text
-        print("Debug - Extracted Text:", response_get)
-    except (AttributeError, IndexError) as e:
-        print(f"Error extracting text: {e}")
-        response_get = ""
+        # Step 3: Parse the JSON data
+        parsed_data = json.loads(json_data)
 
-# Verify the extracted content is a string
-    if not isinstance(response_get, str):
-        print("Error: Extracted content is not a string.")
-        response_get = ""
+        # Step 4: Extract required fields
+        email = parsed_data.get("email", "N/A")
+        name = parsed_data.get("name", "N/A")
+        skill_match_score = parsed_data.get("SkillMatchScore", 0)
+        job_description_experience_requirement = parsed_data.get("YearsExperienceRequired", "N/A")
+        candidate_experience = parsed_data.get("ArchitsYearsExperience", "N/A")
 
-# Apply regex to extract the skill match score
-    score_match = re.search(r"\*\*1\. Skill Match Score:\*\* (\d+)/100", response_get)
-    skill_match_score = int(score_match.group(1)) if score_match else None
+        # Step 5: Print the extracted details
+        print(f"Email josn: {email}")
+        print(f"Name josn: {name}")
+        print(f"Skill Match Score json: {skill_match_score}")
+        print(f"Job Description Experience Requirement json: {job_description_experience_requirement}")
+        print(f" Experience json : {candidate_experience}")
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON: {e}")
+    else:
+        print("JSON block not found in the response.")
 
-# Print the extracted score
-    print("Skill Match Score:", skill_match_score)
+
 
   
 
@@ -91,11 +105,6 @@ def use_gemini_llm(summary, jd_content):
 def score_resume(resume_summary, job_description):
     """Score the resume summary against the job description."""
     # Preprocess the text
-
-    
-
-   
-    
     # Use Gemini LLM for advanced skill and experience matching
     gemini_results = use_gemini_llm(resume_summary, job_description)
     

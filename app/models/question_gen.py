@@ -9,7 +9,7 @@ def generate_questions(resume_content, jd_content):
     #  input prompt
     prompt = (
         f"Analyze the following resume and job description to generate questions for screening candidates. "
-        f"Focus on skills that align in both the resume and job description. Create 4-5 questions, "
+        f"Focus on skills that align in both the resume and job description. Create 4-5 questions as well as answers properly with keypoints , "
         f"starting from basic to tricky level.\n\n"
         f"Resume Content:\n{resume_content}\n\n"
         f"Job Description:\n{jd_content}\n"

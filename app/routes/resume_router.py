@@ -1,7 +1,8 @@
-# app/routes/resume_router.py
-from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI, APIRouter, File, UploadFile, Form, HTTPException
+
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List, Optional
 from pathlib import Path
 import logging
 import uuid
@@ -13,22 +14,29 @@ from app.models.summarizer import summarize_resume
 from app.models.scorer import score_resume
 from app.models.question_gen import generate_questions
 
+# Initialize router
+router = APIRouter(
+    prefix="/api",
+    tags=["resume"]
+)
+
+
 # Set up logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
-# Initialize router
-router = APIRouter()
-
-# Configure paths
-BASE_DIR = Path(__file__).resolve().parent.parent
-TEMPLATES_DIR = BASE_DIR / "templates"
-UPLOAD_FOLDER = BASE_DIR / "uploads"
-
-# Create necessary directories
-UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
-
-# Configure templates
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+# Response Models
+class ResumeAnalysisResponse(BaseModel):
+    summary: str
+    score: float
+    alignment: float
+    questions: List[str]
+    
+class ErrorResponse(BaseModel):
+    detail: str
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {"pdf", "docx", "txt"}
@@ -37,20 +45,32 @@ def allowed_file(filename: str) -> bool:
     """Check if the file extension is allowed."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@router.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    """Serve the upload form."""
-    logger.debug("Accessing index route")
-    return templates.TemplateResponse("index.html", {"request": request})
-
-@router.post("/upload")
-async def upload_resume(
-    request: Request,
+@router.post(
+    "/analyze-resume",  # Note: no /api prefix here since we defined it in the router
+    response_model=ResumeAnalysisResponse,
+    responses={
+        400: {"model": ErrorResponse},
+        500: {"model": ErrorResponse}
+    }
+)
+async def analyze_resume(
     file: UploadFile = File(...),
     job_description: str = Form(...)
-):
-    """Handle file upload and processing."""
-    logger.debug(f"Received upload request for file: {file.filename}")
+) -> ResumeAnalysisResponse:
+    """
+    Analyze a resume against a job description.
+    
+    Parameters:
+    - file: Resume file (PDF, DOCX, or TXT)
+    - job_description: Job description text
+    
+    Returns:
+    - summary: Resume summary
+    - score: Match score between resume and job description
+    - alignment: Alignment percentage
+    - questions: Generated interview questions
+    """
+    logger.debug(f"Received analysis request for file: {file.filename}")
     
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
@@ -60,6 +80,9 @@ async def upload_resume(
             status_code=400, 
             detail="Invalid file format. Please upload a PDF, DOCX, or TXT file."
         )
+    
+    if not job_description.strip():
+        raise HTTPException(status_code=400, detail="Job description is required")
 
     # Create unique filename
     filename = f"{uuid.uuid4()}_{file.filename}"
@@ -90,13 +113,13 @@ async def upload_resume(
         questions = []
         if alignment >= 60:
             questions = generate_questions(resume_content, jd_content)
-
-        return {
-            "summary": summary,
-            "score": score,
-            "alignment": alignment,
-            "questions": questions
-        }
+            
+        return ResumeAnalysisResponse(
+            summary=summary,
+            score=score,
+            alignment=alignment,
+            questions=questions
+        )
 
     except Exception as e:
         logger.error(f"Error processing upload: {str(e)}")
@@ -109,3 +132,14 @@ async def upload_resume(
                 os.remove(file_path)
             except Exception as e:
                 logger.warning(f"Could not delete temporary file: {str(e)}")
+
+@router.get("/health")  # Changed from @app.get to @router.get
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "ok"}
+
+# Configure upload directory
+BASE_DIR = Path(__file__).resolve().parent
+UPLOAD_FOLDER = BASE_DIR / "uploads"
+UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
+
