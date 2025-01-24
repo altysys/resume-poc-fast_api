@@ -13,7 +13,10 @@ def summarize_resume(resume_content):
         model = genai.GenerativeModel("gemini-1.5-flash")
         
         # Generate a summary
-        response = model.generate_content(f"Summarize this resume:\n\n{resume_content}")
+        response = model.generate_content(f"find out email and name from the resume if available " 
+                                          f"year of experience in resume"
+                                          f"Summarize this resume:\n\n{resume_content}"
+                                          f"proveide response in proper json format in key value pairs ")
         
         # Extract and return the text
         return response.text.strip()

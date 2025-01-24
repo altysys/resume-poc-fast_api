@@ -1,35 +1,33 @@
-# app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.resume_router import router as resume_router
-import logging
 
-# Set up logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+app = FastAPI(
+    title="Resume Parser API",
+    description="API for parsing and analyzing resumes against job descriptions",
+    version="1.0.0"
 )
-logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Resume Parser")
-
-# Add CORS middleware
+# Middleware for CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],  # Adjust the origins as needed
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include the router
-app.include_router(resume_router, prefix="")
+# Register the resume router
+app.include_router(resume_router)
 
-# Optional: Add a root route for testing
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
+# Print registered routes during startup
+@app.on_event("startup")
+async def startup_event():
+    print("Startup: Listing all available routes...")
+    for route in app.routes:
+        methods = ", ".join(route.methods)
+        print(f"{methods} {route.path}")
 
+# Prevent unnecessary duplicate route registration
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    print("FastAPI application is ready.")
