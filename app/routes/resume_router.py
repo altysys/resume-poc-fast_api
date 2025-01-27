@@ -12,7 +12,9 @@ from app.models.resume_parser import parse_resume
 from app.models.jd_parser import parse_jd
 from app.models.summarizer import summarize_resume
 from app.models.scorer import score_resume
-from app.models.question_gen import generate_questions
+from app.models.feedback import feed_back
+
+#from app.models.question_gen import generate_questions
 
 # Initialize router
 router = APIRouter(
@@ -33,7 +35,8 @@ class ResumeAnalysisResponse(BaseModel):
     summary: str
     score: float
     alignment: float
-    questions: List[str]
+    feedback : str
+   
     
 class ErrorResponse(BaseModel):
     detail: str
@@ -68,7 +71,7 @@ async def analyze_resume(
     - summary: Resume summary
     - score: Match score between resume and job description
     - alignment: Alignment percentage
-    - questions: Generated interview questions
+    - # questions: Generated interview questions
     """
     logger.debug(f"Received analysis request for file: {file.filename}")
     
@@ -109,16 +112,19 @@ async def analyze_resume(
         summary = summarize_resume(resume_content)
         score, alignment = score_resume(summary, jd_content)
         
+        # Currently not use question and answer
         # Generate questions if alignment is good enough
-        questions = []
-        if alignment >= 60:
-            questions = generate_questions(resume_content, jd_content)
-            
+        #if alignment >= 60:
+            #questions = generate_questions(resume_content, jd_content)
+        feedback  =  feed_back(resume_content , jd_content)
+        print("feedback yhan hai " , feedback)
+
         return ResumeAnalysisResponse(
             summary=summary,
             score=score,
             alignment=alignment,
-            questions=questions
+            feedback=feedback
+          
         )
 
     except Exception as e:
