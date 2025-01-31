@@ -1,7 +1,6 @@
 import google.generativeai as genai
 
 
-genai.configure(api_key="AIzaSyCxgKo5NcdNFLRsdenH3vny_dMiEFszfjo")
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 def generate_questions(resume_content, jd_content):
