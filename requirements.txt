@@ -20,6 +20,7 @@ requests
 google-generativeai
 scikit-learn
 nltk
+aiohttp
 
 
 python-multipart

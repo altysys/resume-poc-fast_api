@@ -20,7 +20,7 @@ def feed_back(resume_content , jd_content):
                                            f"analyse properly how much missing skills affect the candidancy of resume accordinng to job_decription and make response according "
                                            f"On basis of resume analysis seeing experince and skill and projects is this candidate fit for the job provided in job description analyse properly and provide answer in key value pair in yes or no clearly " 
                                            f"provide feedback on basis of  slection asked before and resume and job description why need to selected why not selected in key value pair condider experince and skills involded"
-                                           f"proveide response in proper json format in key value pairs ")
+                                           f"provide response in proper json format in key value pairs must answer all the questions")
         
         # Extract and return the text
         return response.text.strip()
