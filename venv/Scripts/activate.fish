@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV 'C:\job\resume_verse\fast_api\venv'
+set -gx VIRTUAL_ENV 'C:\job\ALTYSYS\resume_verse\Hr aplication\backend\venv'
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"Scripts $PATH

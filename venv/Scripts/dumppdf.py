@@ -1,4 +1,4 @@
-#!C:\job\resume_verse\fast_api\venv\Scripts\python.exe
+#!C:\job\ALTYSYS\resume_verse\Hr aplication\backend\venv\Scripts\python.exe
 """Extract pdf structure in XML format"""
 import logging
 import os.path
