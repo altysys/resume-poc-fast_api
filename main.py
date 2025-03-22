@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.resume_router import router as resume_router
-from app.routes.mcq_routes import mcq_bp
+from app.routes.question_routes import mcq_bp  # This should now work
 from app.core.middleware import add_cors_middleware
 
 # Initialize FastAPI application
