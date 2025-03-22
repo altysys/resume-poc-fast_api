@@ -10,7 +10,18 @@ class LLMClient:
         self.api_key = os.getenv("OPEN_API_KEY")
         self.endpoint = os.getenv("LLM_ENDPOINT")
         self.deployment_name = os.getenv("LLM_NAME")
-        self.api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2023-05-15")
+        self.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+    
+        # Validate required environment variables
+        if not all([self.api_key, self.endpoint, self.deployment_name]):
+            raise ValueError(
+                "Missing required environment variables. Please ensure OPEN_API_KEY, "
+                "LLM_ENDPOINT, and LLM_NAME are set."
+            )
+        
+        # Ensure endpoint has proper scheme
+        if not self.endpoint.startswith(('http://', 'https://')):
+            self.endpoint = f"https://{self.endpoint}"
         
         self.headers = {
             "Content-Type": "application/json",
