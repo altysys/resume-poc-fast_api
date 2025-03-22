@@ -60,12 +60,19 @@ class LLMClient:
             response = requests.post(url, json=payload, headers=self.headers)
 
             if response.status_code == 200:
-                response_data = response.json()
                 try:
+                    response_data = response.json()
                     content = response_data['choices'][0]['message']['content']
-                    return json.loads(content)
-                except json.JSONDecodeError:
-                    return response_data['choices'][0]['message']['content']
+                    
+                    # Try to parse as JSON first
+                    try:
+                        return json.loads(content)
+                    except json.JSONDecodeError:
+                        # If not valid JSON, return as plain text
+                        return {"questions": [{"content": content}]}
+                        
+                except (KeyError, IndexError) as e:
+                    return {"error": f"Unexpected response format: {str(e)}"}
             else:
                 return {"error": f"Failed with status code {response.status_code}"}
 
