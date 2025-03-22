@@ -83,21 +83,24 @@ Deliver the output as valid JSON in the following format:
             
             # Get response from LLM
             response = self.llm_client.generate_response(prompt)
-            response = response["choices"][0]["message"]["content"]
-            print("response", response)
-            # Parse and validate the response
+            
+            # Check for errors in response
             if 'error' in response:
                 return response
+            
+            # Return the response directly if it's already in the correct format
+            if isinstance(response, dict) and 'questions' in response:
+                return response
                 
-            # Ensure the response is in valid JSON format
-            try:
-                if isinstance(response, str):
-                    questions = json.loads(response)
-                else:
-                    questions = response
-                return questions
-            except json.JSONDecodeError:
-                return {"error": "Failed to parse LLM response into JSON"}
+            # If we got a string response, try to parse it
+            if isinstance(response, str):
+                try:
+                    parsed_response = json.loads(response)
+                    return parsed_response
+                except json.JSONDecodeError:
+                    return {"error": "Failed to parse response as JSON"}
+            
+            return response
                 
         except Exception as e:
             return {"error": f"MCQ generation failed: {str(e)}"}
