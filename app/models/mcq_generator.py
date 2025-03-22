@@ -1,10 +1,19 @@
 from ..openai.llm import LLMClient
 from .extract_doc import extract_text_from_pdf
+from dotenv import load_dotenv
 import json
+import os 
+load_dotenv()
 
+api_key = os.getenv("OPEN_API_KEY")
+endpoint = os.getenv("LLM_ENDPOINT")
+deployment_name = os.getenv("LLM_NAME")
+# llm_client = LLMClient(api_key, endpoint, deployment_name )
+
+print("debugger", api_key, endpoint, deployment_name)
 class MCQGenerator:
     def __init__(self):
-        self.llm_client = LLMClient()
+        self.llm_client = LLMClient(api_key, endpoint, deployment_name )
         self.instruction = """
 Analyze the provided system context and extract key details to create multiple-choice questions (MCQs) based solely on that information.
 
@@ -74,7 +83,8 @@ Deliver the output as valid JSON in the following format:
             
             # Get response from LLM
             response = self.llm_client.generate_response(prompt)
-            
+            response = response["choices"][0]["message"]["content"]
+            print("response", response)
             # Parse and validate the response
             if 'error' in response:
                 return response
