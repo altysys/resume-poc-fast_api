@@ -6,6 +6,7 @@ from app.core.middleware import add_cors_middleware
 
 # Initialize FastAPI application
 app = FastAPI(
+    openapi_url="/api/openapi.json", docs_url="/api/docs",
     title="Resume Parser API",
     description="API for parsing and analyzing resumes against job descriptions",
     version="1.0.0"
