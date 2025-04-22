@@ -3,10 +3,10 @@
 from fastapi.middleware.cors import CORSMiddleware
 
 def add_cors_middleware(app):
-    origins = [
-    "https://resume-ai-frontend-flame.vercel.app",  # Your frontend URL
-    "http://localhost",  # Base for localhost
-    "http://localhost:3000",  # Additional local port
+    origins = [ "*"
+    # "https://resume-ai-frontend-flame.vercel.app",  # Your frontend URL
+    # "http://localhost",  # Base for localhost
+    # "http://localhost:3000",  # Additional local port
 ]
     app.add_middleware(
         CORSMiddleware,
