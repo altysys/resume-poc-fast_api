@@ -12,10 +12,11 @@ app = FastAPI(
 )
 
 # List of origins that are allowed to make requests to the backend
-origins = [
-    "https://resume-ai-frontend-flame.vercel.app",  # Your frontend URL
-    "http://localhost",  # Base for localhost
-    "http://localhost:3000",  # Additional local port
+origins = [ 
+    "*"
+    # "https://resume-ai-frontend-flame.vercel.app",  # Your frontend URL
+    # "http://localhost",  # Base for localhost
+    # "http://localhost:3000",  # Additional local port
 ]
 
 # Function to dynamically add origins if needed
