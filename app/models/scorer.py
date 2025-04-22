@@ -37,7 +37,7 @@ def preprocess_text(text):
 
 def use_gemini_llm(summary, jd_content):
     # Define the Gemini API endpoint and headers
-    genai.configure(api_key="AIzaSyCxgKo5NcdNFLRsdenH3vny_dMiEFszfjo")
+   
     model = genai.GenerativeModel("gemini-1.5-flash")
 
     # Prepare the input as a single string
