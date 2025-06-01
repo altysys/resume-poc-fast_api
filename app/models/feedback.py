@@ -1,28 +1,30 @@
-import google.generativeai as genai
-
-# Replace with your Gemini API key
-GEMINI_API_KEY = "AIzaSyCxgKo5NcdNFLRsdenH3vny_dMiEFszfjo"
-
-# Configure the GenAI client
-genai.configure(api_key=GEMINI_API_KEY)
-
-def feed_back(resume_content , jd_content):
+from config import DEPLOYMENT_NAME
+import openai
+def feed_back(resume_content, jd_content):
     try:
-        # Initialize the generative model
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        
-        # Generate a summary
-        response = model.generate_content( f"Resume Summary:\n{resume_content}\n\n"
-                                           f"Job Description:\n{jd_content}"
-                                           f"How much percent skills aligned with job description skill in key value pair"
-                                           f"what key-skill(technical skills important for job role) not present in resume but present in job descriptin in key value pair"
-                                           f"analyse properly how much missing skills affect the candidancy of resume accordinng to job_decription and make response according "
-                                           f"On basis of resume analysis seeing experince and skill and projects is this candidate fit for the job provided in job description analyse properly and provide answer in key value pair in yes or no clearly " 
-                                           f"provide feedback on basis of  slection asked before and resume and job description why need to selected why not selected in key value pair condider experince and skills involded"
-                                           f"provide response in proper json format in key value pairs must answer all the questions")
-        
-        # Extract and return the text
-        return response.text.strip()
+        prompt = (
+            f"Resume Summary:\n{resume_content}\n\n"
+            f"Job Description:\n{jd_content}\n\n"
+            f"Answer the following:\n"
+            f"1. Skill alignment percentage (in key-value pair)\n"
+            f"2. Key technical skills missing from resume but present in JD (in key-value pair)\n"
+            f"3. How do missing skills affect candidacy? (short analysis)\n"
+            f"4. Based on experience, skills, and projects, is this candidate fit for the role? (key-value pair: Yes/No)\n"
+            f"5. Provide final selection feedback explaining why candidate should or shouldn't be selected (in key-value pairs).\n\n"
+            f"Respond strictly in JSON format with key-value pairs only."
+        )
+
+        response = openai.ChatCompletion.create(
+    deployment_id=DEPLOYMENT_NAME,            messages=[
+                {"role": "system", "content": "You are a resume evaluation assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=1000
+        )
+
+        return response.choices[0].message.content.strip()
+    
     except Exception as e:
-        print(f"Error in summarizing resume: {e}")
-        return "An error occurred while summarizing the resume."
+        print(f"Error in analyzing resume: {e}")
+        return "An error occurred while analyzing the resume."
