@@ -1,114 +1,83 @@
 import re
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import nltk
-from nltk.corpus import stopwords
-import requests
-import google.generativeai as genai
 import json
+from config import DEPLOYMENT_NAME
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+import nltk
+import openai
 
-# Ensure you download NLTK stopwords first
+nltk.download('punkt')
 nltk.download('stopwords')
 
 def preprocess_text(text):
-    """Preprocess text by removing special characters, stopwords, and normalizing case."""
-    import re
-    from nltk.corpus import stopwords
-
-    # Check if input is a list
     if isinstance(text, list):
-        # Join the list into a single string
         text = ' '.join(text)
-
-    # Ensure input is now a string
     if not isinstance(text, str):
         raise ValueError("Input must be a string or a list of strings.")
-
-    # Remove special characters and numbers
-    text = re.sub(r'[^a-zA-Z\s]', '', text)
-    # Convert to lowercase
-    text = text.lower()
-    # Remove stopwords
+    text = re.sub(r'[^a-zA-Z\s]', '', text).lower()
     stop_words = set(stopwords.words('english'))
-    words = text.split()
-    filtered_words = [word for word in words if word not in stop_words]
+    filtered_words = [word for word in text.split() if word not in stop_words]
     return ' '.join(filtered_words)
 
 
-def use_gemini_llm(summary, jd_content):
-    # Define the Gemini API endpoint and headers
-   
-    model = genai.GenerativeModel("gemini-1.5-flash")
-
-    # Prepare the input as a single string
-    input_text = (
-    f"Analyze the following resume summary and job description thoroughly. "
-    f"Provide the following information explicitly:\n"
-    f"1. A Skill Match Score (0-100) based on the alignment between the resume and the job description. in this format SkillMatchScore : score \n"
-    f"2. A the job description explicitly requires how many yrs of experince  ?\n"
-    f"3. candidate resume demonstrates how many yrs of experince in number in this format resume_experience :  \n"
-    f"Resume Summary:\n{summary}\n\n"
-    f"Job Description:\n{jd_content}"
-    f"create proper key value pair for score , year of experince , email and name in proper json format very imp "
-      )
-
-    #print("here we go for debbugunh " , input_text)   
-    response = model.generate_content(input_text)
-    json_response = json.dumps({"text": response.text}, indent=2)  # Embed in JSON
-    print("json_response" , json_response)
-   
-
-    json_match = re.search(r'```json\\n(.*?)\\n```', json_response, re.DOTALL)
-
-    if json_match:
-    # Step 2: Clean up the JSON string
-        json_data = json_match.group(1).replace('\\n', '').replace('\\', '')
+def use_openai_llm(summary, jd_content):
+    prompt = (
+        f"Analyze the following resume summary and job description thoroughly. "
+        f"Provide the following information in JSON format:\n\n"
+        f"{{\n"
+        f"  \"name\": \"<Candidate Name>\",\n"
+        f"  \"email\": \"<Candidate Email>\",\n"
+        f"  \"SkillMatchScore\": <score from 0 to 100>,\n"
+        f"  \"YearsExperienceRequired\": <years from JD>,\n"
+        f"  \"CandidateExperience\": <years from resume>\n"
+        f"}}\n\n"
+        f"Resume Summary:\n{summary}\n\n"
+        f"Job Description:\n{jd_content}"
+    )
 
     try:
-        # Step 3: Parse the JSON data
-        parsed_data = json.loads(json_data)
+        response = openai.ChatCompletion.create(
+            deployment_id=DEPLOYMENT_NAME,  # ✅ Correct for Azure OpenAI
+            messages=[
+                {"role": "system", "content": "You are an expert resume screening assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2,
+            max_tokens=5000
+        )
 
-        # Step 4: Extract required fields
-        email = parsed_data.get("email", "N/A")
-        name = parsed_data.get("name", "N/A")
-        skill_match_score = parsed_data.get("SkillMatchScore", 0)
-        job_description_experience_requirement = parsed_data.get("YearsExperienceRequired", "N/A")
-        candidate_experience = parsed_data.get("ArchitsYearsExperience", "N/A")
+        # ✅ Azure OpenAI returns response.choices[0].message["content"]
+        content = response.choices[0].message["content"].strip()
 
-        # Step 5: Print the extracted details
-        print(f"Email josn: {email}")
-        print(f"Name josn: {name}")
-        print(f"Skill Match Score json: {skill_match_score}")
-        print(f"Job Description Experience Requirement json: {job_description_experience_requirement}")
-        print(f" Experience json : {candidate_experience}")
-    except json.JSONDecodeError as e:
-        print(f"Error parsing JSON: {e}")
-    else:
-        print("JSON block not found in the response.")
+        # Attempt to extract JSON block from the response
+        json_match = re.search(r'\{[\s\S]*?\}', content)
+        if not json_match:
+            raise ValueError("No valid JSON found in model response.")
+        
+        parsed_data = json.loads(json_match.group(0))
 
+        return {
+            "skill_match_score": int(parsed_data.get("SkillMatchScore", 0)),
+            "name": parsed_data.get("name", "N/A"),
+            "email": parsed_data.get("email", "N/A"),
+            "jd_experience": parsed_data.get("YearsExperienceRequired", "N/A"),
+            "resume_experience": parsed_data.get("CandidateExperience", "N/A")
+        }
 
-
-  
-
-
-
-# Create gemini_result object
-    gemini_result = {
-        "skill_match_score": skill_match_score,
-    }
-    print("hger" , gemini_result)
-
-    return gemini_result
-
+    except Exception as e:
+        print(f"Error in OpenAI LLM: {e}")
+        return {
+            "skill_match_score": 0,
+            "name": "N/A",
+            "email": "N/A",
+            "jd_experience": "N/A",
+            "resume_experience": "N/A"
+        }
 
 
 def score_resume(resume_summary, job_description):
-    """Score the resume summary against the job description."""
-    # Preprocess the text
-    # Use Gemini LLM for advanced skill and experience matching
-    gemini_results = use_gemini_llm(resume_summary, job_description)
-    
-    # Combine the baseline and Gemini LLM results
-    final_score = (gemini_results["skill_match_score"])
-    alignment =   final_score
+    results = use_openai_llm(resume_summary, job_description)
+    final_score = results.get("skill_match_score", 0)
+    alignment = final_score  # you may change this logic if needed
+    print("Results:", results)
     return final_score, alignment
