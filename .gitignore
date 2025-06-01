@@ -1,0 +1,43 @@
+# Ignore Python compiled files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Ignore Virtual Environment
+venv/
+.env
+.venv/
+env/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Ignore IDE/editor specific files
+.vscode/
+.idea/
+*.sublime-workspace
+*.swp
+
+# Ignore Logs and Database
+logs/
+*.log
+db.sqlite3
+instance/
+*.db
+*.sqlite
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore Docker files (if using Docker)
+docker-compose.override.yml
+
+# Ignore Jupyter Notebook checkpoints (if using Jupyter)
+.ipynb_checkpoints/
+
+# Ignore build and distribution directories
+build/
+dist/
+*.egg-info/
