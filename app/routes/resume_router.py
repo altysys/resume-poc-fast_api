@@ -96,13 +96,19 @@ async def process_resume(file_path: Path, job_description: str) -> ResumeAnalysi
 
         # Generate summary and score
         summary = summarize_resume(resume_content)
+        # Ensure summary is a string
+        if summary is None:
+            summary = "No summary could be generated."
+        else:
+            summary = str(summary)  # Convert to string if it's another type
+            
         score, alignment = score_resume(summary, jd_content)
         feedback = feed_back(resume_content, jd_content)
 
         return ResumeAnalysisResponse(
             summary=summary,
             score=score,
-           alignment=alignment,
+            alignment=alignment,  # Fixed indentation
             feedback=feedback
         )
 
